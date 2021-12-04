@@ -6,6 +6,18 @@ const int NUM_LEDS = 200;
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, 3, NEO_RGB + NEO_KHZ800);
 
+size_t stars_count = 0;
+float stars_x[40];
+
+void create_stars() {
+  stars_count = 0;
+  float star_x = (float)random(20, 75) / 1000.;
+  while(star_x < 1.) {
+    stars_x[stars_count++] = star_x;
+    star_x += (float)random(20, 75) / 1000.;
+  }
+}
+
 void setup() {
   strip.begin();
   strip.setBrightness(255);
@@ -15,6 +27,10 @@ void setup() {
   Serial.setTimeout(100);
 
   pinMode(13, OUTPUT);
+
+  randomSeed(analogRead(0));
+
+  create_stars();
 }
 
 float fcos(float x) {
@@ -40,7 +56,7 @@ void mix(vec3* out_color, vec3* color_0, vec3* color_1, float value) {
 vec3 main_color = {0, 0, 0};
 
 vec3 sun = {0xff, 0xd9, 0x25};
-vec3 sky = {0x3e, 0x9e, 0xe2};
+vec3 sky = {0x23, 0x5b, 0x82};
 vec3 cloud = {0xff, 0xff, 0xff};
 // vec3 cloud = {0xff, 0x00, 0x00};
 vec3 grass_0 = {0x45, 0xc4, 0x00};
@@ -56,29 +72,50 @@ float frac(float v) {
   return v - floor(v);
 }
 
+float sky_x(float x) {
+  if(x < 0.75) {
+    return 0.34 + x * 0.667;
+  } else {
+    return 0.84 + (x - 0.75) * 0.64;
+  }
+}
+
+bool is_ground(float x) {
+  return (x > 0.68 && x < 0.84) || (x < 0.34);
+}
+
 void render_day(float t, float x, vec3* out_color) {
-  bool is_ground = (x > 0.68 && x < 0.84) || (x < 0.34);
-  // bool is_ground = false;
-  
-  if(is_ground) {
+  if(is_ground(x)) {
     vec3 grass;
     mix(&grass, &grass_0, &grass_1, fcos(x * 200 + t * 0.3) * 3);
     memcpy(out_color, &grass, sizeof(vec3));
   } else {
     memcpy(out_color, &sky, sizeof(vec3));
     for(size_t i = 0; i < CLOUD_COUNT; i++) {
-      float cloud_x = frac(cloud_position[i] + frac(t * cloud_speed[i]));
+      float cloud_x = sky_x(frac(cloud_position[i] + frac(t * cloud_speed[i])));
       mix(out_color, out_color, &cloud,
         (cloud_size[i] - abs(x - cloud_x)) * 200
       );
     }
 
-    float sun_x = frac(t * 0.02);
-    float sun_size = 0.05;
+    float sun_x = sky_x(frac(t * 0.01));
+    float sun_size = 0.03;
     
     mix(out_color, out_color, &sun,
       (sun_size - abs(x - sun_x)) * 100
     );
+  }
+}
+
+vec3 night_sky = {0x01,0x00,0x01};
+vec3 star = {0x10, 0x10, 0x06};
+
+void render_night(float t, float x, vec3* out_color) {
+  memcpy(out_color, &night_sky, sizeof(vec3));
+  for(size_t i = 0; i < stars_count; i++) {
+    if(abs(x - stars_x[i]) < 0.0025) {
+      memcpy(out_color, &star, sizeof(vec3));
+    }
   }
 }
 
@@ -88,7 +125,8 @@ void render_waves(float t, float x, vec3* out_color) {
 }
 
 void render(float t, float x, vec3* out_color) {
-  render_day(t, x, out_color);
+  // render_day(t, x, out_color);
+  render_night(t, x, out_color);
 }
 
 void user_input() {
@@ -105,6 +143,13 @@ void user_input() {
     break;
     case 's':
       target = &sky;
+    break;
+    case 'n':
+      target = &night_sky;
+    break;
+    case 't':
+      target = &star;
+    break;
   }
 
   if(target != NULL) {
@@ -116,7 +161,7 @@ void user_input() {
 }
 
 void loop() {
-  // user_input();
+  user_input();
   
   strip.clear();
   float t = (float)millis() / 1000;
