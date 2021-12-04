@@ -59,8 +59,8 @@ vec3 sun = {0xff, 0xd9, 0x25};
 vec3 sky = {0x23, 0x5b, 0x82};
 vec3 cloud = {0xff, 0xff, 0xff};
 // vec3 cloud = {0xff, 0x00, 0x00};
-vec3 grass_0 = {0x45, 0xc4, 0x00};
-vec3 grass_1 = {0x07, 0x29, 0x03};
+vec3 grass_0 = {0x10, 0x30, 0x00};
+vec3 grass_1 = {0x00, 0x0a, 0x00};
 
 #define CLOUD_COUNT 3
 
@@ -125,8 +125,8 @@ void render_waves(float t, float x, vec3* out_color) {
 }
 
 void render(float t, float x, vec3* out_color) {
-  // render_day(t, x, out_color);
-  render_night(t, x, out_color);
+  render_day(t, x, out_color);
+  // render_night(t, x, out_color);
 }
 
 void user_input() {
@@ -161,7 +161,7 @@ void user_input() {
 }
 
 void loop() {
-  user_input();
+  // user_input();
   
   strip.clear();
   float t = (float)millis() / 1000;
