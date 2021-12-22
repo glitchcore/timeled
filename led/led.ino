@@ -55,9 +55,9 @@ void mix(vec3* out_color, vec3* color_0, vec3* color_1, float value) {
 
 vec3 main_color = {0, 0, 0};
 
-vec3 sun = {0xff, 0xd9, 0x25};
-vec3 sky = {0x23, 0x5b, 0x82};
-vec3 cloud = {0xff, 0xff, 0xff};
+vec3 sun = {0xff, 0xcc, 0x55};
+vec3 sky = {0x33, 0x33, 0x55};
+vec3 cloud = {0x55, 0x55, 0x55};
 // vec3 cloud = {0xff, 0x00, 0x00};
 vec3 grass_0 = {0x10, 0x30, 0x00};
 vec3 grass_1 = {0x00, 0x0a, 0x00};
@@ -119,6 +119,12 @@ void render_night(float t, float x, vec3* out_color) {
   }
 }
 
+vec3 sunset_0 = {0x77, 0x00, 0x00};
+vec3 sunset_1 = {0x55, 0x22, 0x00};
+
+void render_sunset(float t, float x, vec3* out_color) {
+  mix(out_color, &sunset_0, &sunset_1, x);
+}
 void render_waves(float t, float x, vec3* out_color) {
   /*out_color->b = 90 * (1. + fcos((t*6/6 + x * 6)));
   out_color->r = 255 - out_color->b;*/
@@ -127,6 +133,7 @@ void render_waves(float t, float x, vec3* out_color) {
 void render(float t, float x, vec3* out_color) {
   render_day(t, x, out_color);
   // render_night(t, x, out_color);
+  // render_sunset(t, x, out_color);
 }
 
 void user_input() {
@@ -170,7 +177,7 @@ void loop() {
     vec3 out_color = {0, 0, 0};
     render(t, ((float)n / NUM_LEDS), &out_color);
     strip.setPixelColor(n, out_color.r, out_color.g, out_color.b);
-    digitalWrite(13, n < NUM_LEDS/2 ? HIGH : LOW);
+    // digitalWrite(13, n < NUM_LEDS/2 ? HIGH : LOW);
   }
   strip.show();
 }
